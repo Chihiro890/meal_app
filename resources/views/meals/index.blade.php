@@ -2,7 +2,7 @@
     <div class="container max-w-7xl mx-auto px-4 md:px-12 pb-3 mt-3">
 
 
-        {{-- <x-validation-errors :errors="$errors" /> --}}
+
         <x-flash-message :message="session('notice')" />
         {{-- <p>現在時刻：{{ $timestamp }}</p> --}}
 
