@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
 class MealRequest extends FormRequest
 {
@@ -21,23 +22,40 @@ class MealRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(Request $request)
     {
         $route = $this->route()->getName();
-        
+
+
         $rule = [
             'title' => 'required|string|max:50',
-            'name' => 'required',
             'body' => 'required|string|max:2000',
+            'category_id' => 'required',
 
         ];
-        if (
-            $route === 'meal.store' ||
-            ($route === 'meal.update' && $this->file('image'))
-        ) {
+
+        if ($route === 'meals.store' || ($route === 'meals.update' && $this->file('image'))) {
             $rule['image'] = 'required|file|image|mimes:jpg,png';
         }
-
         return $rule;
+    }
+    public function attributes()
+    {
+        return [
+            'title' => '食事名',
+            'body' => '詳細',
+            'category_id' => 'カテゴリー',
+            'image' => '写真'
+        ];
+
+
+        // if (
+        //     $route === 'meals.store' ||
+        //     ($route === 'meals.update' && $this->file('image'))
+        // ) {
+        //     $rule['image'] = 'required|file|image|mimes:jpg,png';
+        // }
+
+        // return $rule;
     }
 }

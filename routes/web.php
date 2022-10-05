@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MealController;
+use App\Http\Controllers\LikeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,8 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 
+require __DIR__ . '/auth.php';
+
 // Route::resource('meals', MealController::class);
 Route::resource('meals', MealController::class)
     ->only(['create', 'store', 'edit', 'update', 'destroy'])
@@ -29,4 +32,6 @@ Route::resource('meals', MealController::class)
 Route::resource('meals', MealController::class)
     ->only(['show', 'index']);
 
-require __DIR__ . '/auth.php';
+Route::resource('meals.likes', LikeController::class)
+    ->only(['store', 'destroy'])
+    ->middleware('auth');

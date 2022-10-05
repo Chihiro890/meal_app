@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\MealRequest;
 use App\Models\Meal;
+use App\Models\Like;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+
 
 class MealController extends Controller
 {
@@ -19,13 +22,7 @@ class MealController extends Controller
     {
 
         $meals = Meal::with('user')->latest()->paginate(4);
-        // $meals = Meal::latest()->get();
-        // 現在の日時
-        // $timestamp = 1599613200;
 
-        // return view('index', [
-        //     'timestamp' => $timestamp,
-        // ]);
 
         return view('meals.index', compact('meals'));
     }
@@ -53,12 +50,14 @@ class MealController extends Controller
         $meal = new Meal($request->all());
         $meal->user_id = $request->user()->id;
 
-        $meal->category_id = $request->name;
-        // dd($meal);
-        // dd($meal->category_id);
+
 
         $file = $request->file('image');
         $meal->image = self::createFileName($file);
+        // $meal->category_id = $request->name;
+        // dd($meal);
+        // dd($meal->category_id);
+
         // トランザクション開始
         DB::beginTransaction();
         try {
@@ -67,6 +66,7 @@ class MealController extends Controller
 
             // 画像アップロード
             if (!Storage::putFileAs('images/meals', $file, $meal->image)) {
+                // if (!Storage::putFileAs('images/meals', $file, $meal->image)) {
                 // 例外を投げてロールバックさせる
                 throw new \Exception('画像ファイルの保存に失敗しました。');
             }
@@ -92,11 +92,36 @@ class MealController extends Controller
      */
     public function show($id)
     {
+
         $meal = Meal::find($id);
+        if (Auth::user()) {
+            $like = Like::where('meal_id', $meal->id)->where('user_id', auth()->user()->id)->first();
+            // dd($like);
+            return view('meals.show', compact('meal', 'like'));
+        } else {
+            return view('meals.show', compact('meal'));
 
-        return view('meals.show', compact('meal'));
+
+
+            //      $like = Like::with('like')
+
+            //             // $like = Like::where('meal', $meal->id)->where('user', auth()->user()->id)->first();
+            //             return view('meals.show', compact('meal', 'like'));
+            //         } else {
+            //             return view('meals.show', compact('meal'));
+            //         }
+            //         return view('meals.show', compact('meal'));
+
+
+            //         if (Auth::user()) {
+            //             $like = Like::where('meal_id', $meal->id)->where('user_id', auth()->user()->id)->first();
+            //             return view('meals.show', compact('meal', 'like'));
+            //         } else {
+            //             return view('meals.show', compact('meal'));
+            //         }
+            //     }
+        }
     }
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -118,43 +143,46 @@ class MealController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(MealRequest $request, $id)
+    public function update(MealRequest $request, Meal $meal)
     {
-        $meal = Meal::find($id);
-        $meal->category_id = $request->name;
+        // $meal = new Meal($request->all());
+        // $meal->category_id = $request->name;
+        // $meal = Meal::find($id);
 
+        // $meal->fill($request->all());
+        $meal->category_id = $request->category_id;
+        // dd($meal);
+        // $meal->user_id = $request->user()->id;
         if ($request->user()->cannot('update', $meal)) {
             return redirect()->route('meals.show', $meal)
+                // return redirect()->route('meals.show', $meal)
                 ->withErrors('自分の記事以外は更新できません');
         }
 
         $file = $request->file('image');
+        
         if ($file) {
             $delete_file_path = $meal->image_path;
             $meal->image = self::createFileName($file);
         }
         $meal->fill($request->all());
-
+        $meal->save();
         // トランザクション開始
         DB::beginTransaction();
+        
         try {
-            // 更新
+        
             $meal->save();
-
+            
             if ($file) {
-                // 画像アップロード
+            
                 if (!Storage::putFileAs('images/meals', $file, $meal->image)) {
-                    // 例外を投げてロールバックさせる
-                    throw new \Exception('画像ファイルの保存に失敗しました。');
-                }
-
-                // 画像削除
-                if (!Storage::delete($delete_file_path)) {
-                    //アップロードした画像を削除する
-                    Storage::delete($meal->image_path);
-                    //例外を投げてロールバックさせる
                     throw new \Exception('画像ファイルの削除に失敗しました。');
                 }
+                if (!Storage::delete($delete_file_path)) {
+                    throw new \Exception('画像ファイルの保存に失敗しました。');
+                }
+                
             }
 
             // トランザクション終了(成功)
@@ -164,7 +192,7 @@ class MealController extends Controller
             DB::rollback();
             return back()->withInput()->withErrors($e->getMessage());
         }
-
+        
         return redirect()->route('meals.show', $meal)
             ->with('notice', '記事を更新しました');
     }
@@ -175,15 +203,18 @@ class MealController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Meal $meal)
+    public function destroy($id)
     {
 
+        $meal = Meal::find($id);
+        DB::beginTransaction();
         try {
             $meal->delete();
 
             if (!Storage::delete($meal->image_path)) {
-                throw new \Exception('画像ファイルの保存に失敗しました。');
+                throw new \Exception('画像ファイルの削除に失敗しました。');
             }
+            DB::commit();
         } catch (\Throwable $th) {
             return back()->withInput()->withErrors($th->getMessage());
         }
@@ -197,4 +228,3 @@ class MealController extends Controller
         return date('YmdHis') . '_' . $file->getClientOriginalName();
     }
 }
-

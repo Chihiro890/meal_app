@@ -12,13 +12,20 @@ class CategorySeeder extends Seeder
      *
      * @return void
      */
-    public function run() {
-        if (!DB::table('categories')->first()) {
-            DB::table('categories')->insert([
-                ['name' => '野菜'],
-                ['name' => 'タンパク質'],
-                ['name' => '炭水化物'],
-            ]);
-        }
+    public function run()
+    {
+
+        $param = [
+            [
+                'name' => '野菜',
+            ],
+            [
+                'name' => 'タンパク質',
+            ],
+            [
+                'name' => '炭水化物',
+            ]
+        ];
+        DB::table('categories')->insert($param);
     }
 }

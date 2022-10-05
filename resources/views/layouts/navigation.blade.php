@@ -118,7 +118,7 @@
 
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('register')">
-                        {{ __('Sign Up') }}
+                        {{ __('新規登録') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('login')">
                         {{ __('Log In') }}
