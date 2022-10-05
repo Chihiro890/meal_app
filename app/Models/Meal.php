@@ -12,8 +12,9 @@ class Meal extends Model
 
     protected $fillable = [
         'title',
-        // 'category_id',
         'body',
+        'image',
+        'category_id',
     ];
 
 
@@ -25,6 +26,16 @@ class Meal extends Model
     {
         return $this->belongsTo(Category::class);
     }
+    public function likes()
+    {
+        return $this->hasMany(like::class);
+    }
+
+    // public function getImagePathAttribute()
+    // {
+    //     return 'images/meals/' . $this->image;
+    // }
+
     public function getImageUrlAttribute()
     {
         return Storage::url($this->image_path);

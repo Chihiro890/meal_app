@@ -20,10 +20,11 @@
             <label for="category">カテゴリー</label>
             @foreach ($categories as $category)
                 <div>
-                    <label><input type="radio" name="name" id='category'
+                    <label><input type="radio" name="category_id" id='category'
                             value="{{ $category->id }}">{{ $category->name }}</label>
                 </div>
             @endforeach
+
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm mb-2" for="body">
